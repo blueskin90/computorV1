@@ -67,10 +67,10 @@ def parsing(string):
 #recommence c'est trop complique ton truc
 
 class Token:
-    def __init__(self, value):
+    def __init__(self, value, power = 0):
         try :
             self.value = float(value)
-            self.pow = 0
+            self.pow = power
             self.type = "number"
         except ValueError:
             if value == '+' or value == '-' or value == '/' or value == '*':
@@ -116,6 +116,14 @@ class Equation:
             tmp.append(Token(value))
         self.right = tmp
 
+    def addHelpers(self, array):
+        array.append(Token("+"))
+        array.append(Token(0, 0))
+        array.append(Token("+"))
+        array.append(Token(0, 1))
+        array.append(Token("+"))
+        array.append(Token(0, 2))
+
     def simplifyPart(self, array):
         tmp = []
         for count, token in enumerate(array):
@@ -149,6 +157,8 @@ class Equation:
         self.initialParsing(equation)
         self.tokenization()
         self.simplify()
+#       self.addHelpers(self.left) #add helpers to help calculate after
+#       self.addHelpers(self.right)
         self.dump()
 
     def dump(self):
