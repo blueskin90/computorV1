@@ -5,6 +5,7 @@ import io
 import re
 from enum import Enum
 from copy import deepcopy
+import copy
 
 
 """
@@ -80,11 +81,22 @@ class Token:
                 self.value = 1;
                 self.pow = int(value[2:])
                 self.type = "number"
+    def reverse(self):
+        if self.type == "number":
+            self.value *= -1
+        else:
+            if self.value == '-':
+                self.value = '+'
+            elif self.value == '+':
+                self.value = '-'
+        return (self)
+
     def __mul__(self, other):
         retval = Token(self.value * other.value)
         retval.type = "number"
         retval.pow = self.pow + other.pow
         return (retval)
+
     def __truediv__(self, other):
         retval = Token(self.value / other.value)
         retval.type = "number"
@@ -95,7 +107,6 @@ class Token:
         if self.type != "operation":
             return 'value : {}\tpower :{}\ttype : {}'.format(self.value, self.pow, self.type)
         return 'value : {}\ttype : {}'.format(self.value, self.type)
-        
 
 class Equation:
     def initialParsing(self, equationString):
@@ -146,19 +157,39 @@ class Equation:
         for token in tmp:
             array.append(token)
 
-
-
     def simplify(self):
         self.simplifyPart(self.left)
         self.simplifyPart(self.right)
         return
+
+    def moveLeft(self):
+        if self.right:
+            if self.right[0].value < 0:
+                self.left.append(Token('+'))
+            else:
+                self.left.append(Token('-'))
+            self.left.append(copy.deepcopy(self.right[0]))
+            self.right.pop(0)
+        for token in self.right:
+            if token.type == 'number':
+                self.left.append(token)
+            else:
+                self.left.append(token.reverse())
+        self.right.clear()
+
+    def lastReduction(self):
+        print("lets go coder ca")
+
+    def reduce(self):
+        self.simplify()
+        self.moveLeft()
+        self.addHelpers(self.left)
+        self.lastReduction()
                  
     def __init__(self, equation):
         self.initialParsing(equation)
         self.tokenization()
-        self.simplify()
-#       self.addHelpers(self.left) #add helpers to help calculate after
-#       self.addHelpers(self.right)
+        self.reduce()
         self.dump()
 
     def dump(self):
@@ -168,8 +199,6 @@ class Equation:
         print("\nRight :")
         for token in self.right:
             print(token)
-
-
 
     def __str__(self):
         return 'left : {}\tright : {}'.format(self.left, self.right)
