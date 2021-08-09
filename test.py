@@ -6,6 +6,7 @@ import re
 from enum import Enum
 from copy import deepcopy
 import copy
+import operator
 
 
 """
@@ -91,6 +92,12 @@ class Token:
                 self.value = '-'
         return (self)
 
+    def fuse(self, other):
+        if other is None or other.value == '+':
+            return (copy.deepcopy(self))
+        else:
+            return(copy.deepcopy(self.reverse()))
+
     def __mul__(self, other):
         retval = Token(self.value * other.value)
         retval.type = "number"
@@ -101,6 +108,10 @@ class Token:
         retval = Token(self.value / other.value)
         retval.type = "number"
         retval.pow = self.pow - other.pow
+        return (retval)
+
+    def __add__(self, other):
+        retval = Token(self.value + other.value, self.pow)
         return (retval)
 
     def __str__(self):
@@ -177,20 +188,56 @@ class Equation:
                 self.left.append(token.reverse())
         self.right.clear()
 
+    def fuseAll(self):
+        tmp = []
+        for count, token in enumerate(self.left):
+            if (token.type == "number"):
+                if (count > 0):
+                    tmp.append(token.fuse(self.left[count - 1]))
+                else:
+                    tmp.append(token)
+        self.left.clear()
+        for token in tmp:
+            self.left.append(token)
+
+    def order(self):
+        self.left.sort(key=operator.attrgetter('pow'))
+
     def lastReduction(self):
-        print("lets go coder ca")
+        tmp = []
+        actual = copy.deepcopy(self.left[0])
+        self.left.pop(0);
+        for token in self.left:
+            if (actual.pow == token.pow):
+                actual = actual + token
+            else:
+                tmp.append(actual)
+                actual = token
+        tmp.append(actual)
+        self.left.clear()
+        for token in tmp:
+            self.left.append(token)
+
+    def printReduced(self):
+        for token in self.left:
+            if (token.value != 0):
+                sign =  '- ' if token.value < 0 else '+ '
+                print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
+        print ("= 0")
 
     def reduce(self):
         self.simplify()
         self.moveLeft()
         self.addHelpers(self.left)
+        self.fuseAll()
+        self.order()
         self.lastReduction()
                  
     def __init__(self, equation):
         self.initialParsing(equation)
         self.tokenization()
         self.reduce()
-        self.dump()
+        self.printReduced()
 
     def dump(self):
         print("Left :")
