@@ -219,10 +219,17 @@ class Equation:
             self.left.append(token)
 
     def printReduced(self):
+        print("Reduced form: ", end='')
+        firstprinted = 0
         for token in self.left:
             if (token.value != 0):
                 sign =  '- ' if token.value < 0 else '+ '
+                if firstprinted == 0 and sign == '+ ':
+                    sign = ''
                 print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
+                firstprinted = 1
+        if firstprinted == 0:
+            sys.exit("0 = 0\nAll numbers are solution")
         print ("= 0")
 
     def reduce(self):
@@ -233,11 +240,28 @@ class Equation:
         self.order()
         self.lastReduction()
                  
+    def findDegree(self):
+        highest = 0
+        lowest = 0
+        for token in self.left:
+            if token.value != 0:
+                if token.pow < lowest:
+                    lowest = token.pow
+                if token.pow > highest:
+                    highest = token.pow
+        if lowest < 0:
+            print("Polynomial degree lower than 0: " + str(highest))
+        self.degree = highest
+        print("Polynomial degree: " + str(highest))
+        if highest > 2:
+            sys.exit("The polynomial degree is strictly greater than 2, I can't solve")
+
     def __init__(self, equation):
         self.initialParsing(equation)
         self.tokenization()
         self.reduce()
         self.printReduced()
+        self.findDegree()
 
     def dump(self):
         print("Left :")
@@ -250,15 +274,11 @@ class Equation:
     def __str__(self):
         return 'left : {}\tright : {}'.format(self.left, self.right)
 
-def parsing(string):
-    equation = Equation(string)
-#    print(equation)
- 
 
 def main(ac, av):
     if ac != 2:
         usage()
-    equation = parsing(av[1])
+    equation = Equation(av[1])
 
 
 if __name__ == "__main__":
