@@ -1,9 +1,7 @@
 import sys
-import parser
 import tokenize
 import io
 import re
-from enum import Enum
 from copy import deepcopy
 import copy
 import operator
