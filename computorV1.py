@@ -7,66 +7,7 @@ from enum import Enum
 from copy import deepcopy
 import copy
 import operator
-
-
-"""
-def usage():
-    sys.exit("usage: ./computor \"equation to solve\"")
-
-class ParsingToken:
-    def __init__(self, tokType, value):
-        self.value = value
-        self.type = tokType
-
-    def __str__(self):
-        return 'type : {}\tvalue : {}'.format(self.type, self.value)
-        #print(f'type : {self.type}\tvalue : {self.value}')
-
-
-def opList():
-    for name in tokenize.tok_name:
-        print("number: ", name, " value: ", tokenize.tok_name[name])
-
-def parsing(string):
-    splitted = string.split("=")
-    if len(splitted) != 2:
-        sys.exit("Wrong Format")
-    #ici rajouter la * avant les ( et rajouter les ^ 1 apres les X solo
-    tmp = splitted[0].replace('X', '1')
-    print(tmp)
-#    try:
-    print(eval(tmp))
-#    except Exception as exc:
-#        sys.exit("Equation is incorrect")
-    #check we have only 1 equal
-    
-#    pattern = re.compile("^((\s*([0-9X])?|[\.\(\)\+\-\\\*\^])\s?)*$")
-    pattern = re.compile("(([+-]?(?:[0-9]*[.])?[0-9]+)|(?:\s*)|([\+\-\*\\\^])|(X)|([\(\)]))+")
-    if pattern.search(splitted[0]) is None or pattern.search(splitted[1]) is None:
-        sys.exit("Wrong Format")
-    list = pattern.search(splitted[0])
-    print(list)
-
-    try:
-        left = tokenize.generate_tokens(io.StringIO(splitted[0]).readline)
-        right = tokenize.generate_tokens(io.StringIO(splitted[1]).readline)
-        leftVal = []
-        rightVal = []
-        #opList()
-        for tokType, tokVal, _, _, _  in left:
-            leftVal.append(ParsingToken(tokType, tokVal))
-            print(tokType, tokVal)
-        for tokType, tokVal, _, _, _  in right:
-            rightVal.append(ParsingToken(tokType, tokVal))
-
-    except Exception as exc:
-        print("There was an error while parsing : ", exc)
-        sys.exit()
-#    for token in leftVal:
-#        print(token)
-    return left
-"""
-#recommence c'est trop complique ton truc
+import math
 
 class Token:
     def __init__(self, value, power = 0):
@@ -80,7 +21,7 @@ class Token:
                 self.type = "operation"
             else:
                 self.value = 1;
-                self.pow = int(value[2:])
+                self.pow = float(value[2:])
                 self.type = "number"
     def reverse(self):
         if self.type == "number":
@@ -226,10 +167,23 @@ class Equation:
                 sign =  '- ' if token.value < 0 else '+ '
                 if firstprinted == 0 and sign == '+ ':
                     sign = ''
-                print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
+                value = abs(token.value)
+                if value.is_integer():
+                    print(sign+str(int(value)), end=' * X^')
+                else:
+                    print(sign+str(value), end=' * X^')
+#                print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
+                value = token.pow
+                if value.is_integer():
+                    print(str(int(value)), end=' ')
+                else:
+                    print(value, end=' ')
+
+
+                #penser a ne pas print le .0 si c'est pas un float
                 firstprinted = 1
         if firstprinted == 0:
-            sys.exit("0 = 0\nAll numbers are solution")
+            sys.exit("0 * X^0 = 0\nAll numbers are solution")
         print ("= 0")
 
     def reduce(self):
@@ -239,6 +193,7 @@ class Equation:
         self.fuseAll()
         self.order()
         self.lastReduction()
+        self.printReduced()
                  
     def findDegree(self):
         highest = 0
@@ -249,19 +204,94 @@ class Equation:
                     lowest = token.pow
                 if token.pow > highest:
                     highest = token.pow
+                if token.pow.is_integer() is False:
+                    sys.exit("Some power expression isn't an integer, I can't solve.")
         if lowest < 0:
-            print("Polynomial degree lower than 0: " + str(highest))
+            sys.exit("Polynomial degree lower than 0: " + str(lowest) + ", can't solve.")
         self.degree = highest
-        print("Polynomial degree: " + str(highest))
+        print("Polynomial degree: " + str(int(highest)))
         if highest > 2:
-            sys.exit("The polynomial degree is strictly greater than 2, I can't solve")
+            sys.exit("The polynomial degree is strictly greater than 2, I can't solve.")
+
+    def getDegreeValue(self, power):
+        for token in self.left:
+            if token.pow == power:
+                return token.value
+
+    def solveZero(self):
+        if self.getDegreeValue(0) == 0:
+            print("All real numbers are the solution")
+        else:
+            print(self.getDegreeValue(0), "≠ 0, Impossible to solve")
+            
+    def solveOne(self):
+        print("The solution is :")
+        x = self.getDegreeValue(1)
+        value = self.getDegreeValue(0)
+        if x > 0:
+            solution = ((-value) / x)
+        else:
+            solution = (value / (-x))
+        if solution.is_integer():
+            print(str(int(solution)))
+        else:
+            print(solution)
+
+    def solveTwoPositive(self):
+        print("Discriminant is strictly positive, the two solutions are:")
+        root = math.sqrt(self.discriminant)
+        solution1 = ((-self.b) - root) / (2 * self.a)
+        solution2 = ((-self.b) + root) / (2 * self.a)
+        print(int(solution1) if solution1.is_integer() else solution1)
+        print(int(solution2) if solution2.is_integer() else solution2)
+        return
+
+    def solveTwoNegative(self):
+        root = math.sqrt(-(self.discriminant))
+        real = ((-self.b) / (2 * self.a))
+        print(self.a, self.b, self.c)
+        imaginary = root / (2 * self.a)
+        print("Discriminant is strictly negative, the two complex solutions are:")
+        print(int(real) if real.is_integer() else real, end=' + ')
+        print(int(imaginary) if imaginary.is_integer() else imaginary, end='')
+        print("i")
+
+        print(int(real) if real.is_integer() else real, end=' - ')
+        print(int(imaginary) if imaginary.is_integer() else imaginary, end='')
+        print("i")
+        return
+
+    def solveTwo(self):
+        self.a = self.getDegreeValue(2)
+        self.b = self.getDegreeValue(1)
+        self.c = self.getDegreeValue(0)
+        self.discriminant = (self.b * self.b) - 4 * (self.a * self.c)
+        if self.discriminant > 0:
+            self.solveTwoPositive()
+            return
+        elif self.discriminant < 0:
+            self.solveTwoNegative()
+            return
+        else:
+            print("Discriminant is 0, the only solution is:")
+            value = self.b / (2 * self.a)
+            string = str(int(value)) if value.is_integer() else str(value)
+            print(value)
+            
+    def solve(self):
+        self.findDegree()
+        if self.degree == 0:
+            self.solveZero()
+        elif self.degree == 1:
+            self.solveOne()
+        else:
+            self.solveTwo()
 
     def __init__(self, equation):
         self.initialParsing(equation)
         self.tokenization()
         self.reduce()
-        self.printReduced()
-        self.findDegree()
+        self.solve()
 
     def dump(self):
         print("Left :")
