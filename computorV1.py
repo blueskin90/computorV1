@@ -237,7 +237,7 @@ class Equation:
 
     def solveTwoPositive(self):
         print("Discriminant is strictly positive, the two solutions are:")
-        root = math.sqrt(self.discriminant)
+        root = self.discriminant ** 0.5
         solution1 = ((-self.b) - root) / (2 * self.a)
         solution2 = ((-self.b) + root) / (2 * self.a)
         print(int(solution1) if solution1.is_integer() else solution1)
@@ -245,9 +245,8 @@ class Equation:
         return
 
     def solveTwoNegative(self):
-        root = math.sqrt(-(self.discriminant))
+        root = (-(self.discriminant)) ** 0.5
         real = ((-self.b) / (2 * self.a))
-        print(self.a, self.b, self.c)
         imaginary = root / (2 * self.a)
         print("Discriminant is strictly negative, the two complex solutions are:")
         print(int(real) if real.is_integer() else real, end=' + ')
