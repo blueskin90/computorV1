@@ -7,6 +7,18 @@ import copy
 import operator
 import math
 
+def sqroot(value):
+    if value == 0:
+        return 0.0
+    val = 0
+    increment = 1
+    while val * val < value and increment > 0.000000000000001:
+        if (val + increment) * (val + increment) >  value:
+            increment *= 0.1
+        else:
+            val += increment
+    return val
+
 class Token:
     def __init__(self, value, power = 0):
         try :
@@ -18,9 +30,12 @@ class Token:
                 self.value = value
                 self.type = "operation"
             else:
-                self.value = 1;
-                self.pow = float(value[2:])
-                self.type = "number"
+                try:
+                    self.value = 1;
+                    self.pow = float(value[2:])
+                    self.type = "number"
+                except ValueError:
+                    sys.exit("There was a problem when parsing")
     def reverse(self):
         if self.type == "number":
             self.value *= -1
@@ -237,7 +252,7 @@ class Equation:
 
     def solveTwoPositive(self):
         print("Discriminant is strictly positive, the two solutions are:")
-        root = self.discriminant ** 0.5
+        root = sqroot(self.discriminant)
         solution1 = ((-self.b) - root) / (2 * self.a)
         solution2 = ((-self.b) + root) / (2 * self.a)
         print(int(solution1) if solution1.is_integer() else solution1)
@@ -245,7 +260,9 @@ class Equation:
         return
 
     def solveTwoNegative(self):
-        root = (-(self.discriminant)) ** 0.5
+        print(self.discriminant)
+        print(self.a, self.b, self.c)
+        root = sqroot(-(self.discriminant))
         real = ((-self.b) / (2 * self.a))
         imaginary = root / (2 * self.a)
         print("Discriminant is strictly negative, the two complex solutions are:")
