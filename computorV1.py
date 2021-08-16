@@ -260,19 +260,17 @@ class Equation:
         return
 
     def solveTwoNegative(self):
-        print(self.discriminant)
-        print(self.a, self.b, self.c)
         root = sqroot(-(self.discriminant))
         real = ((-self.b) / (2 * self.a))
         imaginary = root / (2 * self.a)
         print("Discriminant is strictly negative, the two complex solutions are:")
         print(int(real) if real.is_integer() else real, end=' + ')
         print(int(imaginary) if imaginary.is_integer() else imaginary, end='')
-        print("i")
+        print(" * i")
 
         print(int(real) if real.is_integer() else real, end=' - ')
         print(int(imaginary) if imaginary.is_integer() else imaginary, end='')
-        print("i")
+        print(" * i")
         return
 
     def solveTwo(self):
