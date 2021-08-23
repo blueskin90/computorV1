@@ -32,7 +32,10 @@ class Token:
             else:
                 try:
                     self.value = 1;
-                    self.pow = float(value[2:])
+                    if len(value) == 1:
+                        self.pow = 1
+                    else:
+                        self.pow = float(value[2:])
                     self.type = "number"
                 except ValueError:
                     sys.exit("There was a problem when parsing")
@@ -181,16 +184,25 @@ class Equation:
                 if firstprinted == 0 and sign == '+ ':
                     sign = ''
                 value = abs(token.value)
+
                 if value.is_integer():
-                    print(sign+str(int(value)), end=' * X^')
+                    print(sign+str(int(value)), end='')
                 else:
-                    print(sign+str(value), end=' * X^')
-#                print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
+                    print(sign+str(value), end='')
+                
+
                 value = token.pow
-                if isinstance(value, int) or value.is_integer():
-                    print(str(int(value)), end=' ')
+                if value != 0:
+                    if value == 1:
+                        print('X ', end='')
+                    else:
+                        print('X^', end='')
+                        if isinstance(value, int) or value.is_integer():
+                            print(str(int(value)), end=' ')
+                        else:
+                            print(value, end=' ')
                 else:
-                    print(value, end=' ')
+                    print(' ', end='')
 
 
                 #penser a ne pas print le .0 si c'est pas un float
