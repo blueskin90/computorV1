@@ -187,7 +187,7 @@ class Equation:
                     print(sign+str(value), end=' * X^')
 #                print(sign+str(abs(token.value)) + " * X^"+ str(token.pow), end = ' ')
                 value = token.pow
-                if value.is_integer():
+                if isinstance(value, int) or value.is_integer():
                     print(str(int(value)), end=' ')
                 else:
                     print(value, end=' ')
@@ -217,7 +217,7 @@ class Equation:
                     lowest = token.pow
                 if token.pow > highest:
                     highest = token.pow
-                if token.pow.is_integer() is False:
+                if (isinstance(token.pow, int) is False) and token.pow.is_integer() is False:
                     sys.exit("Some power expression isn't an integer, I can't solve.")
         if lowest < 0:
             sys.exit("Polynomial degree lower than 0: " + str(lowest) + ", can't solve.")
