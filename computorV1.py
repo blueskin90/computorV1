@@ -19,6 +19,9 @@ def sqroot(value):
             val += increment
     return val
 
+def usage():
+    sys.exit("python3 computorV1.py 'equation'")
+
 class Token:
     def __init__(self, value, power = 0):
         try :
@@ -78,7 +81,7 @@ class Token:
 
 class Equation:
     def initialParsing(self, equationString):
-        equationString = equationString.upper()
+        equationString = equationString.strip().upper()
         splitted = equationString.split("=")
         self.left = splitted[0].split(' ')
         self.right = splitted[1].split(' ')
@@ -298,7 +301,7 @@ class Equation:
             return
         else:
             print("Discriminant is 0, the only solution is:")
-            value = self.b / (2 * self.a)
+            value = (-self.b) / (2 * self.a)
             string = str(int(value)) if value.is_integer() else str(value)
             print(value)
             
@@ -312,10 +315,13 @@ class Equation:
             self.solveTwo()
 
     def __init__(self, equation):
-        self.initialParsing(equation)
-        self.tokenization()
-        self.reduce()
-        self.solve()
+        try:
+            self.initialParsing(equation)
+            self.tokenization()
+            self.reduce()
+            self.solve()
+        except:
+            sys.exit("There was a problem when parsing")
 
     def dump(self):
         print("Left :")
