@@ -184,8 +184,11 @@ class Equation:
         for token in self.left:
             if (token.value != 0):
                 sign =  '- ' if token.value < 0 else '+ '
-                if firstprinted == 0 and sign == '+ ':
-                    sign = ''
+                if firstprinted == 0:
+                    if sign == '+ ':
+                        sign = ''
+                    else:
+                        sign = '-'
                 value = abs(token.value)
 
                 if value.is_integer():
