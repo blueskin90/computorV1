@@ -211,7 +211,7 @@ class Equation:
                 #penser a ne pas print le .0 si c'est pas un float
                 firstprinted = 1
         if firstprinted == 0:
-            sys.exit("0 * X^0 = 0\nAll numbers are solution")
+            sys.exit("0 = 0\nAll numbers are solution")
         print ("= 0")
 
     def reduce(self):
