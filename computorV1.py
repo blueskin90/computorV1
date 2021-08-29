@@ -42,6 +42,7 @@ class Token:
                     self.type = "number"
                 except ValueError:
                     sys.exit("There was a problem when parsing")
+
     def reverse(self):
         if self.type == "number":
             self.value *= -1
@@ -83,10 +84,8 @@ class Equation:
     def initialParsing(self, equationString):
         equationString = equationString.strip().upper()
         splitted = equationString.split("=")
-        self.left = splitted[0].split(' ')
-        self.right = splitted[1].split(' ')
-        self.left.remove("")
-        self.right.remove("")
+        self.left = splitted[0].strip().split(' ')
+        self.right = splitted[1].strip().split(' ')
 
     def tokenization(self):
         tmp = []
@@ -318,13 +317,10 @@ class Equation:
             self.solveTwo()
 
     def __init__(self, equation):
-        try:
             self.initialParsing(equation)
             self.tokenization()
             self.reduce()
             self.solve()
-        except:
-            sys.exit("There was a problem when parsing")
 
     def dump(self):
         print("Left :")
@@ -342,7 +338,6 @@ def main(ac, av):
     if ac != 2:
         usage()
     equation = Equation(av[1])
-
 
 if __name__ == "__main__":
         main(len(sys.argv), sys.argv)
