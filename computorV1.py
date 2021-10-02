@@ -32,6 +32,8 @@ class Token:
                 self.type = "operation"
             else:
                 try:
+                    if value[0] != "X":
+                        sys.exit("I only work with X, not \'" + value[0] + "\'")
                     self.value = 1;
                     if len(value) == 1:
                         self.pow = 1
