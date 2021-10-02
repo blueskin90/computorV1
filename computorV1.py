@@ -7,6 +7,7 @@ import copy
 import operator
 import math
 
+
 def sqroot(value):
     if value == 0:
         return 0.0
@@ -18,9 +19,6 @@ def sqroot(value):
         else:
             val += increment
     return val
-
-def usage():
-    sys.exit("python3 computorV1.py 'equation'")
 
 class Token:
     def __init__(self, value, power = 0):
@@ -42,6 +40,7 @@ class Token:
                     self.type = "number"
                 except ValueError:
                     sys.exit("There was a problem when parsing")
+
 
     def reverse(self):
         if self.type == "number":
@@ -80,151 +79,28 @@ class Token:
             return 'value : {}\tpower :{}\ttype : {}'.format(self.value, self.pow, self.type)
         return 'value : {}\ttype : {}'.format(self.value, self.type)
 
+
+
+
 class Equation:
-    def initialParsing(self, equationString):
-        equationString = equationString.strip().upper()
-        splitted = equationString.split("=")
-        self.left = splitted[0].strip().split(' ')
-        self.right = splitted[1].strip().split(' ')
+    def __init__(self, equation):
+            self.splitEqual(equation)
+            self.tokenization()
+            self.simplify()
+            self.moveLeft()
+            self.fuseLeft()
+            self.orderLeft()
+            self.reduceLeft()
+            if (self.left[0].pow < 0):
+                self.cancelNegative(self.left[0].pow) # penser au cas ou on a qu'un seul X qui est negatif
+                self.orderLeft()
+                self.reduceLeft()
+            self.addHelpers(self.left)
+            self.orderLeft()
+            self.lastReduction()
+            self.printReduced()
+            self.solve()
 
-    def tokenization(self):
-        tmp = []
-        for value in self.left:
-            tmp.append(Token(value))
-        self.left = tmp.copy()
-        tmp = []
-        for value in self.right:
-            tmp.append(Token(value))
-        self.right = tmp
-
-    def addHelpers(self, array):
-        array.append(Token("+"))
-        array.append(Token(0, 0))
-        array.append(Token("+"))
-        array.append(Token(0, 1))
-        array.append(Token("+"))
-        array.append(Token(0, 2))
-
-    def simplifyPart(self, array):
-        tmp = []
-        for count, token in enumerate(array):
-            if token.type == "operation" and token.value == "*":
-                tmptok = tmp[-1] * array[count + 1] 
-                tmp.pop()
-                tmp.append(tmptok)
-                array.remove(array[count + 1])
-            elif token.type == "operation" and token.value == "/":
-                if array[count + 1].value == 0:
-                    sys.exit("Division par 0")
-                else:
-                    tmptok = tmp[-1] / array[count + 1] 
-                    tmp.pop()
-                    tmp.append(tmptok)
-                    array.remove(array[count + 1])
-            else:
-                tmp.append(token)
-        array.clear()
-        for token in tmp:
-            array.append(token)
-
-    def simplify(self):
-        self.simplifyPart(self.left)
-        self.simplifyPart(self.right)
-        return
-
-    def moveLeft(self):
-        if self.right:
-            if self.right[0].value < 0:
-                self.left.append(Token('+'))
-            else:
-                self.left.append(Token('-'))
-            self.left.append(copy.deepcopy(self.right[0]))
-            self.right.pop(0)
-        for token in self.right:
-            if token.type == 'number':
-                self.left.append(token)
-            else:
-                self.left.append(token.reverse())
-        self.right.clear()
-
-    def fuseAll(self):
-        tmp = []
-        for count, token in enumerate(self.left):
-            if (token.type == "number"):
-                if (count > 0):
-                    tmp.append(token.fuse(self.left[count - 1]))
-                else:
-                    tmp.append(token)
-        self.left.clear()
-        for token in tmp:
-            self.left.append(token)
-
-    def order(self):
-        self.left.sort(key=operator.attrgetter('pow'))
-
-    def lastReduction(self):
-        tmp = []
-        actual = copy.deepcopy(self.left[0])
-        self.left.pop(0);
-        for token in self.left:
-            if (actual.pow == token.pow):
-                actual = actual + token
-            else:
-                tmp.append(actual)
-                actual = token
-        tmp.append(actual)
-        self.left.clear()
-        for token in tmp:
-            self.left.append(token)
-
-    def printReduced(self):
-        print("Reduced form: ", end='')
-        firstprinted = 0
-        for token in self.left:
-            if (token.value != 0):
-                sign =  '- ' if token.value < 0 else '+ '
-                if firstprinted == 0:
-                    if sign == '+ ':
-                        sign = ''
-                    else:
-                        sign = '-'
-                value = abs(token.value)
-
-                if value.is_integer():
-                    print(sign+str(int(value)), end='')
-                else:
-                    print(sign+str(value), end='')
-                
-
-                value = token.pow
-                if value != 0:
-                    if value == 1:
-                        print('X ', end='')
-                    else:
-                        print('X^', end='')
-                        if isinstance(value, int) or value.is_integer():
-                            print(str(int(value)), end=' ')
-                        else:
-                            print(value, end=' ')
-                else:
-                    print(' ', end='')
-
-
-                #penser a ne pas print le .0 si c'est pas un float
-                firstprinted = 1
-        if firstprinted == 0:
-            sys.exit("0 = 0\nAll numbers are solution")
-        print ("= 0")
-
-    def reduce(self):
-        self.simplify()
-        self.moveLeft()
-        self.addHelpers(self.left)
-        self.fuseAll()
-        self.order()
-        self.lastReduction()
-        self.printReduced()
-                 
     def findDegree(self):
         highest = 0
         lowest = 0
@@ -316,23 +192,184 @@ class Equation:
         else:
             self.solveTwo()
 
-    def __init__(self, equation):
-            self.initialParsing(equation)
-            self.tokenization()
-            self.reduce()
-            self.solve()
-
-    def dump(self):
-        print("Left :")
+    def lastReduction(self):
+        tmp = []
+        actual = copy.deepcopy(self.left[0])
+        self.left.pop(0);
         for token in self.left:
-            print(token)
-        print("\nRight :")
+            if (actual.pow == token.pow):
+                actual = actual + token
+            else:
+                tmp.append(actual)
+                actual = token
+        tmp.append(actual)
+        self.left.clear()
+        for token in tmp:
+            self.left.append(token)
+        if (len(self.left) == 0):
+            self.left.append(Token(0, 0))
+
+
+    def printReduced(self):
+        print("Reduced form: ", end='')
+        firstprinted = 0
+        for token in self.left:
+            if (token.value != 0):
+                sign =  '- ' if token.value < 0 else '+ '
+                if firstprinted == 0:
+                    if sign == '+ ':
+                        sign = ''
+                    else:
+                        sign = '-'
+                value = abs(token.value)
+                try:
+                    if value.is_integer():
+                        print(sign+str(int(value)), end='')
+                    else:
+                        print(sign+str(value), end='')
+                except Exception as e:
+                    print(sign+str(value), end='')
+
+                value = token.pow
+                if value != 0:
+                    if value == 1:
+                        print('X ', end='')
+                    else:
+                        print('X^', end='')
+                        if isinstance(value, int) or value.is_integer():
+                            print(str(int(value)), end=' ')
+                        else:
+                            print(value, end=' ')
+                else:
+                    print(' ', end='')
+
+
+                #penser a ne pas print le .0 si c'est pas un float
+                firstprinted = 1
+        if firstprinted == 0:
+            sys.exit("0 = 0\nAll numbers are solution")
+        print ("= 0")
+
+    def addHelpers(self, array):
+        array.append(Token(0, 0))
+        array.append(Token(0, 1))
+        array.append(Token(0, 2))
+
+
+    def cancelNegative(self, negValue):
+        toadd = 0
+        if (len(self.left) == 1):
+            toadd = 1
+        for index, token in enumerate(self.left):
+            self.left[index] = self.left[index] * Token(1, -negValue + toadd)
+
+    def reduceLeft(self):
+        tmp = []
+        actual = copy.deepcopy(self.left[0])
+        self.left.pop(0);
+        for token in self.left:
+            if (actual.pow == token.pow):
+                actual = actual + token
+            else:
+                tmp.append(actual)
+                actual = token
+        tmp.append(actual)
+        self.left.clear()
+        for token in tmp:
+            if not (token.value == 0 and token.pow == 0):
+                self.left.append(token)
+        if (len(self.left) == 0):
+            self.left.append(Token(0, 0))
+
+    def orderLeft(self):
+        self.left.sort(key=operator.attrgetter('pow'))
+
+    def splitEqual(self, equationString):
+        try:
+            equationString = equationString.strip().upper()
+            splitted = equationString.split("=")
+            if len(splitted) != 2:
+                if len(splitted) == 1:
+                    sys.exit("Didn't found any \'=\' sign.")
+                else:
+                    sys.exit("Found too many \'=\' signs: " + str(len(splitted) - 1) + " were found.")
+            self.left = splitted[0].strip().split(' ')
+            self.right = splitted[1].strip().split(' ')
+
+        except Exception as e:
+            sys.exit("Something went wrong when parsing the equation", e)
+
+    def tokenization(self):
+        tmp = []
+        for value in self.left:
+            tmp.append(Token(value))
+        self.left = tmp.copy()
+        tmp = []
+        for value in self.right:
+            tmp.append(Token(value))
+        self.right = tmp
+
+    def simplifyPart(self, array):
+        tmp = []
+        for count, token in enumerate(array):
+            if token.type == "operation" and token.value == "*":
+                tmptok = tmp[-1] * array[count + 1] 
+                tmp.pop()
+                tmp.append(tmptok)
+                array.remove(array[count + 1])
+            elif token.type == "operation" and token.value == "/":
+                if array[count + 1].value == 0:
+                    sys.exit("Division par 0")
+                else:
+                    tmptok = tmp[-1] / array[count + 1] 
+                    tmp.pop()
+                    tmp.append(tmptok)
+                    array.remove(array[count + 1])
+            else:
+                tmp.append(token)
+        array.clear()
+        for token in tmp:
+            array.append(token)
+
+    def simplify(self):
+        self.simplifyPart(self.left)
+        self.simplifyPart(self.right)
+        return
+
+    def moveLeft(self):
+        if self.right:
+            if self.right[0].value < 0:
+                self.left.append(Token('+'))
+            else:
+                self.left.append(Token('-'))
+            self.left.append(copy.deepcopy(self.right[0]))
+            self.right.pop(0)
         for token in self.right:
-            print(token)
+            if token.type == 'number':
+                self.left.append(token)
+            else:
+                self.left.append(token.reverse())
+        self.right.clear()
+        self.right.append(Token(0, 0))
+
+    def fuseLeft(self):
+        tmp = []
+        for count, token in enumerate(self.left):
+            if (token.type == "number"):
+                if (count > 0):
+                    tmp.append(token.fuse(self.left[count - 1]))
+                else:
+                    tmp.append(token)
+        self.left.clear()
+        for token in tmp:
+            self.left.append(token)
 
     def __str__(self):
-        return 'left : {}\tright : {}'.format(self.left, self.right)
+        return "left:{\n\t" + "\n\t".join(str(x) for x in self.left) + "\n}\nright:{\n\t" +  "\n\t".join(str(x) for x in self.right) + "\n}"
 
+
+def usage():
+    sys.exit("python3 computorV1.py 'equation'")
 
 def main(ac, av):
     if ac != 2:
