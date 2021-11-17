@@ -62,6 +62,7 @@ class Token:
 
     def __mul__(self, other):
         retval = Token(self.value * other.value)
+        #print(self.value, " ", other.value, " ", retval)
         retval.type = "number"
         retval.pow = self.pow + other.pow
         return (retval)
@@ -90,18 +91,38 @@ class Equation:
             self.tokenization()
             self.simplify()
             self.moveLeft()
+            print(self)
             self.fuseLeft()
+            print(self)
             self.orderLeft()
             self.reduceLeft()
             if (self.left[0].pow < 0):
-                self.cancelNegative(self.left[0].pow) # penser au cas ou on a qu'un seul X qui est negatif
+                self.cancelNegative(self.left[0].pow)
                 self.orderLeft()
                 self.reduceLeft()
+            else:
+                self.shouldReduce()
             self.addHelpers(self.left)
             self.orderLeft()
             self.lastReduction()
             self.printReduced()
             self.solve()
+
+    def shouldReduce(self):
+        highest = 0
+        lowest = 0
+        highest = self.left[0].pow
+        lowest = self.left[0].pow
+        for token in self.left:
+            if token.value != 0:
+                if token.pow < lowest:
+                    lowest = token.pow
+                if token.pow > highest:
+                    highest = token.pow
+        if highest <= 2:
+            return
+        elif highest - lowest <= 2:
+            self.cancelNegative(lowest)
 
     def findDegree(self):
         highest = 0
@@ -261,7 +282,7 @@ class Equation:
     def cancelNegative(self, negValue):
         toadd = 0
         if (len(self.left) == 1):
-            toadd = 1
+            toadd = 1 # to not multiply by 0
         for index, token in enumerate(self.left):
             self.left[index] = self.left[index] * Token(1, -negValue + toadd)
 
